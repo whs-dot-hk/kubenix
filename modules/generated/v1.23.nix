@@ -70,17 +70,13 @@ let
     listToAttrs (imap0
       (i: value: nameValuePair
         (
-          (
-            if isAttrs value.${mergeKey}
-            then toString value.${mergeKey}.content
-            else (toString value.${mergeKey})
-          ) + (concatStringsSep "" (map
+          (concatStringsSep "" (map
             (key:
               if isAttrs value.${key}
               then toString value.${key}.content
               else (toString value.${key})
             )
-            listMapKeys))
+            (unique ([ mergeKey ] ++ listMapKeys))))
         )
         (value // { _priority = i; }))
       values);
