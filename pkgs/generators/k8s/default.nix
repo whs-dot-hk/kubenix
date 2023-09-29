@@ -376,9 +376,12 @@ with lib; let
         listToAttrs (imap0
           (i: value: nameValuePair (
             (concatStringsSep "" (map (key:
-                if isAttrs value.''${key}
-                then toString value.''${key}.content
-                else (toString value.''${key})
+                if value ? ''${key}
+                then
+                  if isAttrs value.''${key}
+                  then toString value.''${key}.content
+                  else (toString value.''${key})
+                else ""
               ) (unique ([mergeKey] ++ listMapKeys))))
           ) (value // { _priority = i; }))
         values);
