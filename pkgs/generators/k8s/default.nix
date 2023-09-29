@@ -144,42 +144,26 @@ with lib; let
                         }
                         # if a reference is to complex type
                         else
-                        # make it an attribute set of submodules if only x-kubernetes-patch-merge-key is present, or
-                        # x-kubernetes-patch-merge-key == x-kubernetes-list-map-keys.
-                          if (hasAttr "x-kubernetes-patch-merge-key" property) && (!(hasAttr "x-kubernetes-list-map-keys" property) || (property."x-kubernetes-list-map-keys" == [ property."x-kubernetes-patch-merge-key" ]))
+                          if hasAttr "x-kubernetes-patch-merge-key" property
                           then
                             let
                               mergeKey = property."x-kubernetes-patch-merge-key";
                             in
                             {
-                              type = requiredOrNot (coerceAttrsOfSubmodulesToListByKey (refDefinition property.items) mergeKey [ ]);
+                              type = requiredOrNot (coerceAttrsOfSubmodulesToListByKey (refDefinition property.items) mergeKey (
+                                if hasAttr "x-kubernetes-list-map-keys" property
+                                then property."x-kubernetes-list-map-keys"
+                                else [ ]
+                              ));
                               apply = attrsToList;
                             }
                           # in other case it's a simple list
-                          else
-                          # make it an attribute set of submodules if only x-kubernetes-patch-merge-key is present, or
-                          # x-kubernetes-patch-merge-key == x-kubernetes-list-map-keys.
-                            if
-                              hasAttr "properties" swagger.definitions.${refDefinition property.items}
-                              && hasAttr "name" swagger.definitions.${refDefinition property.items}.properties
-                            then
-                              let
-                                mergeKey = "name";
-                              in
-                              {
-                                type = requiredOrNot (coerceAttrsOfSubmodulesToListByKey (refDefinition property.items) mergeKey (
-                                  if hasAttr "x-kubernetes-list-map-keys" property
-                                  then property."x-kubernetes-list-map-keys"
-                                  else [ ]
-                                ));
-                                apply = attrsToList;
-                              }
-                            else {
-                              type =
-                                if (refDefinition property.items) == _name
-                                then types.unspecified # do not allow self-referential values
-                                else requiredOrNot (types.listOf (submoduleOf definitions (refDefinition property.items)));
-                            }
+                          else {
+                            type =
+                              if (refDefinition property.items) == _name
+                              then types.unspecified # do not allow self-referential values
+                              else requiredOrNot (types.listOf (submoduleOf definitions (refDefinition property.items)));
+                          }
                       # in other case it only references a simple type
                       else {
                         type = requiredOrNot (types.listOf (mapType property.items));
