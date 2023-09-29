@@ -402,12 +402,7 @@ with lib; let
           _priority = mkOption { type = types.nullOr types.int; default = null; };
         };
         config = definitions."''${ref}".config // {
-          ''${mergeKey} = mkOverride 1002 (
-            # use name as mergeKey only if it is not coming from mergeValuesByKey
-            if (!hasPrefix "__kubenix_list_merge_key_" name)
-            then convertName name
-            else null
-          );
+          ''${mergeKey} = mkOverride 1002 (convertName name);
         };
       });
 
