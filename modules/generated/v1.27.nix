@@ -70,20 +70,17 @@ let
     listToAttrs (imap0
       (i: value: nameValuePair
         (
-          if hasAttr mergeKey value
-          then
+          (
             if isAttrs value.${mergeKey}
             then toString value.${mergeKey}.content
             else (toString value.${mergeKey})
-          else
-          # generate merge key for list elements if it's not present
-            "__kubenix_list_merge_key_" + (concatStringsSep "" (map
-              (key:
-                if isAttrs value.${key}
-                then toString value.${key}.content
-                else (toString value.${key})
-              )
-              listMapKeys))
+          ) + (concatStringsSep "" (map
+            (key:
+              if isAttrs value.${key}
+              then toString value.${key}.content
+              else (toString value.${key})
+            )
+            listMapKeys))
         )
         (value // { _priority = i; }))
       values);
