@@ -66,7 +66,7 @@ with lib; let
 
     submoduleForDefinition = ref: name: kind: group: version: ''(submoduleForDefinition "${ref}" "${name}" "${kind}" "${group}" "${version}")'';
 
-    coerceAttrsOfSubmodulesToListByKey = ref: attrMergeKey: listMergeKeys: ''(coerceAttrsOfSubmodulesToListByKey "${ref}" "${attrMergeKey}" [${concatStringsSep " " (map (key: "\"${toString key}\"") listMergeKeys)}])'';
+    coerceAttrsOfSubmodulesToListByKey = ref: mergeKey: listMapKeys: ''(coerceAttrsOfSubmodulesToListByKey "${ref}" "${mergeKey}" [${concatStringsSep " " (map (key: "\"${toString key}\"") listMapKeys)}])'';
 
     attrsToList = "attrsToList";
 
@@ -388,21 +388,21 @@ with lib; let
 
       mkOptionDefault = mkOverride 1001;
 
-      mergeValuesByKey = attrMergeKey: listMergeKeys: values:
+      mergeValuesByKey = mergeKey: listMapKeys: values:
         listToAttrs (imap0
           (i: value: nameValuePair (
-            if hasAttr attrMergeKey value
+            if hasAttr mergeKey value
             then
-              if isAttrs value.''${attrMergeKey}
-              then toString value.''${attrMergeKey}.content
-              else (toString value.''${attrMergeKey})
+              if isAttrs value.''${mergeKey}
+              then toString value.''${mergeKey}.content
+              else (toString value.''${mergeKey})
             else
               # generate merge key for list elements if it's not present
               "__kubenix_list_merge_key_" + (concatStringsSep "" (map (key:
                 if isAttrs value.''${key}
                 then toString value.''${key}.content
                 else (toString value.''${key})
-              ) listMergeKeys))
+              ) listMapKeys))
           ) (value // { _priority = i; }))
         values);
 
@@ -448,10 +448,10 @@ with lib; let
         ];
       });
 
-      coerceAttrsOfSubmodulesToListByKey = ref: attrMergeKey: listMergeKeys: (types.coercedTo
+      coerceAttrsOfSubmodulesToListByKey = ref: mergeKey: listMapKeys: (types.coercedTo
         (types.listOf (submoduleOf ref))
-        (mergeValuesByKey attrMergeKey listMergeKeys)
-        (types.attrsOf (submoduleWithMergeOf ref attrMergeKey))
+        (mergeValuesByKey mergeKey listMapKeys)
+        (types.attrsOf (submoduleWithMergeOf ref mergeKey))
       );
 
       definitions = {
